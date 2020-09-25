@@ -1,6 +1,7 @@
 'use strict';
 
 const express = require("express");
+const moment = require("moment");
 const app = express()
 
 // Constants
@@ -8,25 +9,20 @@ const PORT = 8080;
 const HOST = '0.0.0.0';
 
 function calculate_birthday_diff(birthday) {
-  // TODO: Consider moment.js library to simplify this solution
-  const today = new Date();
-  birthday.setFullYear(today.getFullYear());
-  const diffTimeMs = today - birthday;
-  var diffDays = Math.ceil(diffTimeMs / (1000 * 60 * 60 * 24));
-  if (diffDays > 0) {
-    diffDays = 365 - diffDays;
+  const today = moment();
+  birthday.set('year', today.year());
+  if (today > birthday) {
+    return 365 - today.diff(birthday, 'days');
+  } else {
+    return birthday.diff(today, 'days');
   }
-  else if (diffDays < 0) {
-    diffDays = Math.abs(diffDays);
-  }
-  return diffDays;
 }
 
 // App
 app.get('/hello/:username', (req, res) => {
   const username = req.params.username;
 
-  const mockBirthday = new Date('1993-12-12'); // TODO: Get birthday date from DB
+  const mockBirthday = moment(new Date('1993-01-12')); // TODO: Get birthday date from DB
 
   const daysToBirthday = calculate_birthday_diff(mockBirthday);
   if (daysToBirthday == 0) {
