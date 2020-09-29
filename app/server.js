@@ -2,12 +2,50 @@
 
 const express = require("express");
 const moment = require("moment");
+const Firestore = require('@google-cloud/firestore');
 const app = express()
 
 // Constants
 const PORT = 8080;
 const HOST = '0.0.0.0';
+const projectId = 'XXX' // TODO
+const keyFilename = 'XXX' // TODO
+const db = new Firestore({
+  projectId: projectId,
+  keyFilename: keyFilename,
+});
 
+// Firebase functions
+async function get_birthday(username, res) {
+  try {
+    const userRef = db.collection('users').doc(username);
+    const doc = await userRef.get();
+    if (!doc.exists) {
+      res.sendStatus(404);
+    } else {
+      return moment(doc.data().birthday);
+    }
+  }
+  catch (error) {
+    res.sendStatus(500);
+  }
+  return null;
+}
+
+async function store_birthday(username, birthday) {
+  try {
+    const docRef = db.collection('users').doc(username);
+    await docRef.set({
+      birthday: birthday
+    });
+    return 0;
+  } catch (error) {
+    console.log(error);
+    return 1;
+  }
+}
+
+// Helpers
 function calculate_birthday_diff(birthday) {
   const today = moment();
   birthday.set('year', today.year());
@@ -19,20 +57,20 @@ function calculate_birthday_diff(birthday) {
 }
 
 // App
-app.get('/hello/:username', (req, res) => {
+app.get('/hello/:username', async (req, res) => {
   const username = req.params.username;
-
-  const mockBirthday = moment(new Date('1993-01-12')); // TODO: Get birthday date from DB
-
-  const daysToBirthday = calculate_birthday_diff(mockBirthday);
-  if (daysToBirthday == 0) {
-    res.send('Hello, ' + username + '! Happy birthday!');
-  } else {
-    res.send('Hello, ' + username + '! Your birthday is in ' + daysToBirthday + ' day(s)');
+  const birthday = await get_birthday(username, res);
+  if (birthday != null) {
+    const daysToBirthday = calculate_birthday_diff(birthday);
+    if (daysToBirthday == 0) {
+      res.status(200).send('Hello, ' + username + '! Happy birthday!');
+    } else {
+      res.status(200).send('Hello, ' + username + '! Your birthday is in ' + daysToBirthday + ' day(s)');
+    }
   }
 });
 
-app.put('/hello/:username', (req, res) => {
+app.put('/hello/:username', async (req, res) => {
   const username = req.params.username;
   const dateOfBirthHeader = req.header('dateOfBirth');
 
@@ -49,22 +87,25 @@ app.put('/hello/:username', (req, res) => {
   }
 
   // check date format
-  const dateOfBirth = new Date(dateOfBirthHeader);
+  const dateOfBirth = moment(dateOfBirthHeader);
   if (dateOfBirth == 'Invalid Date') {
     res.status(400).send("Invalid date format");
     return;
   }
 
   // date before today check
-  const today = new Date();
-  if (today.getDate() - dateOfBirth.getDate() == 0) {
+  const today = moment();
+  if (today.getDate() - dateOfBirth.getDate() == 0) { // TODO: Fix this
     res.status(400).send("Date must be before current date");
     return;
   }
 
-  // TODO: Apply username with birthday to DB
-
-  res.status(200);
+  const error_code = await store_birthday(username, dateOfBirthHeader);
+  if (error_code == 0) {
+    return res.sendStatus(204);
+  } else {
+    return res.sendStatus(500);
+  }
 });
 
 app.listen(PORT, HOST);
