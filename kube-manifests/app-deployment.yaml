@@ -1,0 +1,21 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: birthday-app-deployment
+  labels:
+    app: birthday-app
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: birthday-app
+  template:
+    metadata:
+      labels:
+        app: birthday-app
+    spec:
+      containers:
+      - name: birthday-app
+        image: eu.gcr.io/birthday-app/birthday-app:v1
+        ports:
+        - containerPort: 8080

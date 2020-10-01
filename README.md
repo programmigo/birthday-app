@@ -34,3 +34,23 @@ gcloud services enable firestore.googleapis.com
 cd terraform
 terraform init
 terraform apply -auto-approve
+
+
+# Build and push docker image // TODO: Maybe ansible?
+
+gcloud auth configure-docker eu.gcr.io
+cd app
+docker build -t eu.gcr.io/birthday-app/birthday-app:v1 .
+docker push eu.gcr.io/birthday-app/birthday-app:v1
+
+# Apply kube manifests // TODO: Maybe ansible?
+
+gcloud container clusters get-credentials ${TF_VAR_project_id}-gke --region europe-west3 --project $TF_VAR_project_id
+kubectl apply -f kube-manifests/app-deployment.yaml
+kubectl apply -f kube-manifests/app-service.yaml
+
+
+# Destroy resources
+
+terraform destroy -auto-approve
+gcloud projects delete $TF_VAR_project_id
