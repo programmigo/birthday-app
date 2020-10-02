@@ -15,7 +15,17 @@ spec:
         app: birthday-app
     spec:
       containers:
-      - name: birthday-app
-        image: eu.gcr.io/birthday-app/birthday-app:v1
-        ports:
-        - containerPort: 8080
+        - name: birthday-app
+          image: eu.gcr.io/birthday-app-a34966dd/birthday-app:v1 # TODO: Handle unique ID in project here
+          ports:
+            - containerPort: 8080
+          env:
+            - name: GOOGLE_APPLICATION_CREDENTIALS
+              value: /var/run/secret/cloud.google.com/firestore.json
+          volumeMounts:
+            - name: service-account
+              mountPath: /var/run/secret/cloud.google.com
+      volumes:
+        - name: service-account
+          secret:
+            secretName: firebase-access-key

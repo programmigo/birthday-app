@@ -13,7 +13,6 @@ resource "google_app_engine_application" "app" {
 
 // GKE
 resource "google_container_registry" "registry" {
-  project  = var.project_id
   location = "EU"
 }
 

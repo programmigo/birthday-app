@@ -8,12 +8,7 @@ const app = express()
 // Constants
 const PORT = 8080;
 const HOST = '0.0.0.0';
-const projectId = 'XXX' // TODO
-const keyFilename = 'XXX' // TODO
-const db = new Firestore({
-  projectId: projectId,
-  keyFilename: keyFilename,
-});
+const db = new Firestore({ projectId: process.env.GCP_PROJECT });
 
 // Firebase functions
 async function get_birthday(username, res) {
@@ -23,10 +18,11 @@ async function get_birthday(username, res) {
     if (!doc.exists) {
       res.sendStatus(404);
     } else {
-      return moment(doc.data().birthday);
+      return moment.unix(doc.data().birthday);
     }
   }
   catch (error) {
+    console.log(error);
     res.sendStatus(500);
   }
   return null;
@@ -57,6 +53,10 @@ function calculate_birthday_diff(birthday) {
 }
 
 // App
+app.get('/', (req, res) => {
+  res.status(200).send("Hello from Birthday app!");
+});
+
 app.get('/hello/:username', async (req, res) => {
   const username = req.params.username;
   const birthday = await get_birthday(username, res);
@@ -94,13 +94,12 @@ app.put('/hello/:username', async (req, res) => {
   }
 
   // date before today check
-  const today = moment();
-  if (today.getDate() - dateOfBirth.getDate() == 0) { // TODO: Fix this
+  if (moment().diff(dateOfBirth, 'days') == 0) {
     res.status(400).send("Date must be before current date");
     return;
   }
 
-  const error_code = await store_birthday(username, dateOfBirthHeader);
+  const error_code = await store_birthday(username, dateOfBirth);
   if (error_code == 0) {
     return res.sendStatus(204);
   } else {
