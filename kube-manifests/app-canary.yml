@@ -1,0 +1,55 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: birthday-app-canary-deployment
+  labels:
+    app: birthday-app
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: birthday-app
+      track: canary
+  template:
+    metadata:
+      labels:
+        app: birthday-app
+        track: canary
+    spec:
+      containers:
+        - name: birthday-app
+          image: DOCKER_IMAGE_PATH
+          ports:
+            - containerPort: 8080
+          readinessProbe:
+            httpGet:
+              path: /
+              port: 8080
+          env:
+            - name: GOOGLE_APPLICATION_CREDENTIALS
+              value: /var/run/secret/cloud.google.com/firestore.json
+          volumeMounts:
+            - name: service-account
+              mountPath: /var/run/secret/cloud.google.com
+          resources:
+            requests:
+              cpu: 200m
+      volumes:
+        - name: service-account
+          secret:
+            secretName: firebase-access-key
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: birthday-app-service-canary
+spec:
+  selector:
+    app: birthday-app
+    track: canary
+  ports:
+  - protocol: TCP
+    port: 9090
+    targetPort: 8080

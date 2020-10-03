@@ -25,8 +25,9 @@ gcloud projects add-iam-policy-binding ${TF_VAR_project_id} \
   --member serviceAccount:firestore-user@${TF_VAR_project_id}.iam.gserviceaccount.com \
   --role roles/datastore.user
 gcloud iam service-accounts keys create $firestore_credentials_path \
-  --iam-account terraform@${TF_VAR_project_id}.iam.gserviceaccount.com
+  --iam-account firestore-user@${TF_VAR_project_id}.iam.gserviceaccount.com
 
 # Enable necessary APIs
 gcloud services enable appengine.googleapis.com
 gcloud services enable firestore.googleapis.com
+gcloud services enable cloudbuild.googleapis.com

@@ -1,5 +1,6 @@
-# Install gcloud cli and login
-docs: https://cloud.google.com/sdk/docs/install
+# Install gcloud cli, helm and login
+gcloud docs: https://cloud.google.com/sdk/docs/install
+helm docs: https://helm.sh/docs/intro/install/
 
 ```shell
 gcloud components install beta
@@ -49,9 +50,28 @@ docker push eu.gcr.io/${TF_VAR_project_id}/birthday-app:v1
 ```shell
 gcloud container clusters get-credentials ${TF_VAR_project_id}-gke --region $TF_VAR_region --project $TF_VAR_project_id
 kubectl create secret generic firebase-access-key --from-file ~/.config/gcloud/firestore.json
-kubectl apply -f kube-manifests/app-deployment.yaml
-kubectl apply -f kube-manifests/app-service.yaml
+kubectl apply -f kube-manifests/app.yaml
 ```
+
+# Install jenkins
+
+```shell
+kubectl create clusterrolebinding cluster-admin-binding --clusterrole=cluster-admin \
+        --user=$(gcloud config get-value account)
+helm install cd-jenkins jenkins/jenkins -f jenkins/values.yml
+kubectl create clusterrolebinding jenkins-deploy \
+    --clusterrole=cluster-admin --serviceaccount=default:cd-jenkins
+```
+
+## Access to Jenkins UI
+
+```shell
+printf $(kubectl get secret --namespace default cd-jenkins -o jsonpath="{.data.jenkins-admin-password}" | base64 --decode);echo # $password
+export POD_NAME=$(kubectl get pods --namespace default -l "app.kubernetes.io/component=jenkins-master" -l "app.kubernetes.io/instance=cd-jenkins" -o jsonpath="{.items[0].metadata.name}")
+kubectl --namespace default port-forward $POD_NAME 8080:8080
+```
+
+Go to http://127.0.0.1:8080 and login using admin : $password
 
 
 # Destroy resources
