@@ -58,7 +58,7 @@ kubectl apply -f kube-manifests/app.yaml
 ```shell
 kubectl create clusterrolebinding cluster-admin-binding --clusterrole=cluster-admin \
         --user=$(gcloud config get-value account)
-helm install cd-jenkins jenkins/jenkins -f jenkins/values.yml
+helm install --namespace jenkins --create-namespace cd-jenkins jenkins/jenkins -f helm-values/jenkins.yml
 kubectl create clusterrolebinding jenkins-deploy \
     --clusterrole=cluster-admin --serviceaccount=default:cd-jenkins
 ```
@@ -68,10 +68,31 @@ kubectl create clusterrolebinding jenkins-deploy \
 ```shell
 printf $(kubectl get secret --namespace default cd-jenkins -o jsonpath="{.data.jenkins-admin-password}" | base64 --decode);echo # $password
 export POD_NAME=$(kubectl get pods --namespace default -l "app.kubernetes.io/component=jenkins-master" -l "app.kubernetes.io/instance=cd-jenkins" -o jsonpath="{.items[0].metadata.name}")
-kubectl --namespace default port-forward $POD_NAME 8080:8080
+kubectl --namespace jenkins port-forward $POD_NAME 8080:8080
 ```
 
 Go to http://127.0.0.1:8080 and login using admin : $password
+
+
+# Install Prometheus & Grafana for metrics
+
+```shell
+helm repo add prometheus https://prometheus-community.github.io/helm-charts
+helm repo add grafana https://grafana.github.io/helm-charts
+helm install --namespace prometheus --create-namespace prometheus prometheus/prometheus
+helm install --namespace grafana --create-namespace grafana grafana/grafana -f helm-values/grafana.yml
+```
+
+
+## Access grafana UI
+
+```shell
+kubectl get secret --namespace grafana grafana -o jsonpath="{.data.admin-password}" | base64 --decode ; echo # $password
+export POD_NAME=$(kubectl get pods --namespace grafana -l "app.kubernetes.io/name=grafana,app.kubernetes.io/instance=grafana" -o jsonpath="{.items[0].metadata.name}")
+kubectl --namespace grafana port-forward $POD_NAME 3000
+```
+
+Go to http://127.0.0.1:3000 and login using admin : $password
 
 
 # Destroy resources

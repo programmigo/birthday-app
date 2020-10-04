@@ -181,3 +181,5 @@ override.tf.json
 # example: *tfplan*
 
 # End of https://www.toptal.com/developers/gitignore/api/code,terraform,flask
+
+app/node_modules

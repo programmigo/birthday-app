@@ -3,12 +3,23 @@
 const express = require("express");
 const moment = require("moment");
 const Firestore = require('@google-cloud/firestore');
-const app = express()
+const Prometheus = require('prom-client');
 
 // Constants
 const PORT = 8080;
 const HOST = '0.0.0.0';
 const db = new Firestore({ projectId: process.env.GCP_PROJECT });
+const httpRequestDurationMicroseconds = new Prometheus.Histogram({
+  name: 'http_request_duration_ms',
+  help: 'Duration of HTTP requests in ms',
+  labelNames: ['method', 'route', 'code'],
+  buckets: [0.10, 5, 15, 50, 100, 200, 300, 400, 500]
+})
+
+// Vars
+var app = express()
+var promClient = require('prom-client');
+promClient.collectDefaultMetrics();
 
 // Firebase functions
 async function get_birthday(username, res) {
@@ -52,9 +63,14 @@ function calculate_birthday_diff(birthday) {
   }
 }
 
-// App
+// App Endpoints
 app.get('/', (req, res) => {
   res.status(200).send("Hello from Birthday app!");
+});
+
+app.get('/metrics', (req, res) => {
+  res.set('Content-Type', promClient.register.contentType);
+  res.end(promClient.register.metrics());
 });
 
 app.get('/hello/:username', async (req, res) => {
@@ -106,6 +122,20 @@ app.put('/hello/:username', async (req, res) => {
     return res.sendStatus(500);
   }
 });
+
+app.use((req, res, next) => {
+  res.locals.startEpoch = Date.now()
+  next()
+})
+
+app.use((req, res, next) => {
+  const responseTimeInMs = Date.now() - res.locals.startEpoch
+  httpRequestDurationMicroseconds
+    .labels(req.method, req.originalUrl, res.statusCode)
+    .observe(responseTimeInMs)
+
+  next()
+})
 
 app.listen(PORT, HOST);
 console.log(`Running on http://${HOST}:${PORT}`);
