@@ -183,3 +183,4 @@ override.tf.json
 # End of https://www.toptal.com/developers/gitignore/api/code,terraform,flask
 
 app/node_modules
+appv2/node_modules
