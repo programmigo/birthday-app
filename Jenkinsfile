@@ -16,7 +16,11 @@ metadata:
 spec:
   serviceAccountName: cd-jenkins
   containers:
-  # TOOD: Add container for test app
+  - name: node
+    image: node:12-alpine
+    command:
+    - cat
+    tty: true
   - name: gcloud
     image: gcr.io/cloud-builders/gcloud
     command:
@@ -37,7 +41,15 @@ spec:
       }
     }
 
-    // TODO: ADD TEST STAGE
+    stage('Run unit tests') {
+      steps {
+        container('node') {
+          sh 'cd app'
+          sh 'npm install'
+          sh 'npm test'
+        }
+      }
+    }
 
     stage('Build and push image to Container Registry using Cloud Build') {
       when {
