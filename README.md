@@ -61,6 +61,8 @@ Go to http://127.0.0.1:3000 and login using admin : $password
 scripts/canary_port_forward.sh
 ```
 
+Go to http://127.0.0.1:9090
+
 
 # Destroy resources
 
