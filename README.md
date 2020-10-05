@@ -60,14 +60,14 @@ kubectl create clusterrolebinding cluster-admin-binding --clusterrole=cluster-ad
         --user=$(gcloud config get-value account)
 helm install --namespace jenkins --create-namespace cd-jenkins jenkins/jenkins -f helm-values/jenkins.yml
 kubectl create clusterrolebinding jenkins-deploy \
-    --clusterrole=cluster-admin --serviceaccount=default:cd-jenkins
+    --clusterrole=cluster-admin --serviceaccount=jenkins:cd-jenkins
 ```
 
 ## Access to Jenkins UI
 
 ```shell
-printf $(kubectl get secret --namespace default cd-jenkins -o jsonpath="{.data.jenkins-admin-password}" | base64 --decode);echo # $password
-export POD_NAME=$(kubectl get pods --namespace default -l "app.kubernetes.io/component=jenkins-master" -l "app.kubernetes.io/instance=cd-jenkins" -o jsonpath="{.items[0].metadata.name}")
+printf $(kubectl get secret --namespace jenkins cd-jenkins -o jsonpath="{.data.jenkins-admin-password}" | base64 --decode);echo # $password
+export POD_NAME=$(kubectl get pods --namespace jenkins -l "app.kubernetes.io/component=jenkins-master" -l "app.kubernetes.io/instance=cd-jenkins" -o jsonpath="{.items[0].metadata.name}")
 kubectl --namespace jenkins port-forward $POD_NAME 8080:8080
 ```
 

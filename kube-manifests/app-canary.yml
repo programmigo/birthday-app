@@ -3,6 +3,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: birthday-app-canary-deployment
+  namespace: default
   labels:
     app: birthday-app
 spec:
@@ -45,6 +46,7 @@ apiVersion: v1
 kind: Service
 metadata:
   name: birthday-app-service-canary
+  namespace: default
 spec:
   selector:
     app: birthday-app
