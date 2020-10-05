@@ -6,7 +6,7 @@ metadata:
   labels:
     app: birthday-app
 spec:
-  replicas: 2
+  replicas: 3
   selector:
     matchLabels:
       app: birthday-app
@@ -67,7 +67,7 @@ spec:
     apiVersion: apps/v1
     kind: Deployment
     name: birthday-app-deployment
-  minReplicas: 1
+  minReplicas: 2
   maxReplicas: 5
   metrics:
   - type: Resource
