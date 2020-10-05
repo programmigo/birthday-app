@@ -44,9 +44,8 @@ spec:
     stage('Run unit tests') {
       steps {
         container('node') {
-          sh 'cd app'
-          sh 'npm install'
-          sh 'npm test'
+          sh 'cd app && npm install'
+          sh 'cd app && npm test'
         }
       }
     }
