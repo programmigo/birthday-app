@@ -1,15 +1,19 @@
 {
   "name": "birthday-app",
   "version": "1.0.0",
-  "description": "Birthday app",
-  "main": "server.js",
   "scripts": {
-    "start": "node server.js"
+    "start": "node ./bin/www",
+    "test": "jest ./test"
   },
   "dependencies": {
-    "express": "^4.17.1",
+    "cookie-parser": "~1.4.4",
+    "debug": "~2.6.9",
+    "express": "~4.16.1",
+    "morgan": "~1.9.1",
     "moment": "^2.29.0",
     "prom-client": "^12.0.0",
-    "@google-cloud/firestore": "^4.2.0"
+    "@google-cloud/firestore": "^4.2.0",
+    "jest": "^26.4.2",
+    "supertest": "^5.0.0"
   }
 }
