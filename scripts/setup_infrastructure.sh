@@ -20,13 +20,7 @@ cd $git_root_dir
 gcloud container clusters get-credentials ${TF_VAR_project_id}-gke --region $TF_VAR_region --project $TF_VAR_project_id
 kubectl create secret generic firebase-access-key --from-file $firestore_credentials_path
 rm $firestore_credentials_path
-unameOut="$(uname -s)"
-case "${unameOut}" in
-    Darwin*)    sed -i '' "s+DOCKER_IMAGE_PATH+eu.gcr.io/${TF_VAR_project_id}/birthday-app:0+" kube-manifests/app.yml;;
-    *)          sed -i "s+DOCKER_IMAGE_PATH+eu.gcr.io/${TF_VAR_project_id}/birthday-app:0+" kube-manifests/app.yml
-esac
-kubectl apply -f kube-manifests/app.yml
-git restore kube-manifests/app.yml
+$git_root_dir/scripts/deploy_initial_image.sh
 
 # Install jenkins, prometheus, grafana using helm
 cd $git_root_dir
